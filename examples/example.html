@@ -3,13 +3,40 @@
     <head>
         <meta charset="utf-8">
 
-        <title>Alice API usage example</title>
-        <meta name="description" content="Alice API usage simple example">
+        <title>API Alice example</title>
+        <meta name="description" content="API Alice usage simple example">
         <meta name="author" content="alex@alice.si">
-
+        <link rel="shortcut icon" type="image/png" href="https://s3.eu-west-2.amazonaws.com/alice-res/favicon.ico"/>
     </head>
 
     <body>
-        <script src="file:///Users/alex/alice/alice-api/dist/alice-bundle.js"></script>
+        <script src='../alice.js'></script>
+        <script>
+            function generateEmail() {
+                return Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + '@gmail.com'
+            }
+
+            function test () {
+                let email = generateEmail();
+                console.log(`Generated email ${email}`);
+                let donation = {
+                    email,
+                    projectCode: 'save-from-abuse',
+                    amount: 1000,
+                    cardData: {
+                        number: '3569990000000132',
+                        expirationDate: '1120',
+                        cvc: '123'
+                    }
+                };
+                console.log('Sending donation');
+                Alice.sendDonation(donation);
+            }
+
+            window.addEventListener("load", function(event) {
+                test();
+            });
+
+        </script>
     </body>
 </html>

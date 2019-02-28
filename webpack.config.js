@@ -1,16 +1,19 @@
 const path = require('path');
-const webpack = require('webpack');
 
 module.exports = {
-  entry: './index.js',
+  entry: './alice.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'alice-bundle.js'
+    filename: 'alice.js'
   },
   node: {
     // These modules don't work on client side
     fs: 'empty',
     net: 'empty',
     tls: 'empty'
+  },
+  devServer: {
+    compress: true,
+    port: 9000
   }
 };
