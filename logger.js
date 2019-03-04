@@ -9,4 +9,4 @@ const logger = Winston.createLogger({
   level: Config.logLevel,
 });
 
-export default logger;;
+export default logger;

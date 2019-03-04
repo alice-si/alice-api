@@ -16,13 +16,13 @@
                 return Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + '@gmail.com'
             }
 
-            function test () {
+            function test (amount) {
                 let email = generateEmail();
                 console.log(`Generated email ${email}`);
                 let donation = {
                     email,
                     projectCode: 'save-from-abuse',
-                    amount: 1000,
+                    amount: amount * 100,
                     cardData: {
                         number: '3569990000000132',
                         expirationDate: '1120',
@@ -30,11 +30,14 @@
                     }
                 };
                 console.log('Sending donation');
-                Alice.sendDonation(donation);
+                return Alice.sendDonation(donation);
             }
 
-            window.addEventListener("load", function(event) {
-                test();
+            window.addEventListener("load", async function (event) {
+                console.log('SIMPLE DONATION EXAMPLE');
+                await test(10.4);
+                console.log('BIG (3DS) DONATION EXAMPLE');
+                await test(100); // 3DS password: secret3
             });
 
         </script>

@@ -1,7 +1,7 @@
 let Config = {};
 
-Config.API = 'http://localhost:8080/api';
-Config.URL = 'http://localhost:8080';
+Config.API = 'https://api.stage.alice.si/api';
+Config.URL = 'https://stage.alice.si';
 Config.MANGO = {
     url: 'https://api.sandbox.mangopay.com',
     clientId: 'kuba'

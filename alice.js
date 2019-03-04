@@ -7,13 +7,11 @@ let Alice = {};
 
 /*
     TODO think about:
-        - 3DS - Important (check with Stripe)
         - error recording (we have a special endpoint for it)
         - Read about hidden passsword and start implementing
         - Read about webpack server and tests
         - Remove card name from alice-web front side
 */
-
 
 
 /*
@@ -57,7 +55,7 @@ Alice.sendDonation = async ({
         let registrationCardData = await registerCard(preregistrationCardData, cardData);
         Logger.debug('Card registration completed');
     
-        await sendDonationInternal({
+        let sentDonation = await sendDonationInternal({
             amount,
             giftAid,
             projectId,
@@ -65,19 +63,29 @@ Alice.sendDonation = async ({
             cardId: registrationCardData.CardId
         }, token);
 
-        Logger.debug('Donation sent!');
+        if (sentDonation.secureModeNeeded) {
+            Logger.debug(`Secure mode needed - processing 3DS with url: ${sentDonation.redirectUrl}`);
+            await process3DS(sentDonation.redirectUrl, sentDonation.donation._id, token);
+            Logger.debug('3DS processing finished');
+        }
+
+        Logger.debug('Donation was sent successfully!');
     } catch (err) {
-        Logger.error(err);
+        if (err) {
+            Logger.error(err.toString());
+        } else {
+            Logger.error('Unknown error occured');
+        }
     }
 };
 
 const getProjectDetails = async (projectCode) => {
-    let response = await Request.get(Config.API + `getProjectDetails/${projectCode}`);
+    let response = await Request.get(`${Config.API}/getProjectDetails/${projectCode}`);
     return JSON.parse(response);
 };
 
 const registerEmail = async (email) => {
-    let response = await Request.post(Config.API + 'registerEmail', {
+    let response = await Request.post(`${Config.API}/registerEmail`, {
         json: {email}
     });
     if (!response.success) {
@@ -88,7 +96,7 @@ const registerEmail = async (email) => {
 
 const preRegisterCard = async (token) => {
     let response = await Request.get({
-        url: Config.API + 'preRegisterCard',
+        url: `${Config.API}/preRegisterCard`,
         headers: {
             Authorization: token
         }
@@ -123,13 +131,63 @@ const registerCard = async (preregistrationData, cardData) => {
 
 const sendDonationInternal = async (donation, token) => {
     let response = await Request.post({
-        url: Config.API + 'sendDonation',
+        url: `${Config.API}/sendDonation`,
         headers: {
             Authorization: token
         },
         json: donation
     });
     return response;
+};
+
+const process3DS = async (url, donationId, token) => {
+    let newWindow = window.open(url, '_blank', 'height=570,width=520');
+
+    await new Promise((resolve, reject) => {
+        const timeout = 3000;
+        // Waiting until 3DS verification is finished
+        // https://stackoverflow.com/questions/9388380/capture-the-close-event-of-popup-window-in-javascript
+        let timer = setInterval(async () => {
+            const finish = (cb) => {
+                clearInterval(timer);
+                if (newWindow) {
+                    newWindow.close();
+                }
+                cb();
+            };
+
+            if (newWindow) {
+                // Checking donation status
+                let status = await checkDonationStatus(donationId, token);
+                Logger.debug(`Donation status: ${status}`);
+                switch (status) {
+                    case 'CREATED':
+                        return finish(resolve);
+                    case 'FAILED':
+                        return finish(reject);
+                    default:
+                        break;
+                }
+            } else {
+                Logger.error('3DS verification failed, user may have disabled pop-ups in settings');
+                alert('Unfortunatelly 3DS verification was failed.'
+                    + ' Please allow pop-up windows opening for current page in you browser preferences.');
+                finish(() => {
+                    reject('Window was not opened');
+                });
+            }
+        }, timeout);
+    });
+};
+
+const checkDonationStatus = async (donationId, token) => {
+    let response = await Request.get({
+        url: `${Config.API}/checkDonationStatus/${donationId}`,
+        headers: {
+            Authorization: token
+        }
+    });
+    return (JSON.parse(response)).status;
 };
 
 window.addEventListener("load", () => {
