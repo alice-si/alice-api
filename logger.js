@@ -1,4 +1,4 @@
-import Config from './config/config';
+import Config from './config';
 import Winston from 'winston';
 
 const logger = Winston.createLogger({

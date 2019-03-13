@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   entry: './alice.js',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, '../dist'),
     filename: 'alice.js'
   },
   node: {

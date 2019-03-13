@@ -7,37 +7,115 @@
         <meta name="description" content="API Alice usage simple example">
         <meta name="author" content="alex@alice.si">
         <link rel="shortcut icon" type="image/png" href="https://s3.eu-west-2.amazonaws.com/alice-res/favicon.ico"/>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src='../alice.js'></script>
     </head>
 
     <body>
-        <script src='../alice.js'></script>
+        <h1>This is an example of alice-api usage</h1>
+
+        <div class="row" style="width:50vw; margin: 30px;">
+            <div class="col-md-12 mb-6">
+                <label for="email">Email</label>
+                <input type="text" class="form-control" id="email" placeholder="" required="">
+            </div>
+            <div class="col-md-12 mb-6">
+                <label for="cc-number">Card number</label>
+                <input type="text" class="form-control" id="cc-number" placeholder="" required="">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="exp-date">Expiration date</label>
+                <input type="text" class="form-control" id="exp-date" placeholder="" required="">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="cvv">CVV</label>
+                <input type="text" class="form-control" id="cvv" placeholder="" required="">
+            </div>
+        </div>
+
+        <div id="buttons" style="margin: 30px;">
+                <button type="button" class="btn btn-primary" onclick="authorize()">Authorize</button>
+
+                <button type="button" class="btn btn-info" onclick="sendDonation(10.5)">Small donation (10.5GBP)</button>
+                <button type="button" class="btn btn-success" onclick="sendDonation(100)">Big donation (100GBP)</button>
+                <div id="show-if-authorized" style="display: none;">
+                    <button type="button" class="btn btn-success" id="authorized-donation-button"
+                        onclick="sendDonation(10, 'Authorized')">
+                        Authorized donation (10GBP)
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="signout-button"
+                        onclick="signout()">
+                        Sign out
+                    </button>
+                </div>
+        </div>
+
+        <div style="margin: 30px" id="logs-container">
+            <h3>Logs</h3>
+            <div id="log" style="font-size: small"></div>
+        </div>
+
         <script>
             function generateEmail() {
                 return Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + '@gmail.com'
             }
 
-            function test (amount) {
-                let email = generateEmail();
-                console.log(`Generated email ${email}`);
+            function sendDonation (amount, type='Anonymous') {
+                let email = document.getElementById('email').value;
+                let cvc = document.getElementById('cvv').value;
+                let expirationDate = document.getElementById('exp-date').value;
+                let number = document.getElementById('cc-number').value;
+
                 let donation = {
                     email,
+                    type,
                     projectCode: 'save-from-abuse',
                     amount: amount * 100,
                     cardData: {
-                        number: '3569990000000132',
-                        expirationDate: '1120',
-                        cvc: '123'
+                        number,
+                        expirationDate,
+                        cvc
                     }
                 };
                 console.log('Sending donation');
                 return Alice.sendDonation(donation);
             }
 
+            function setDefaultValuesForInputs () {
+                document.getElementById('cc-number').value = '3569990000000124';
+                document.getElementById('exp-date').value = '1120';
+                document.getElementById('cvv').value = '123';
+                document.getElementById('email').value = generateEmail();
+            }
+
+            async function authorize () {
+                await Alice.authorize({
+                    clientId: 'forgotten-animals'
+                });
+                if (Alice.isAuthorized()) {
+                    let elOnAuthorization = document.getElementById('show-if-authorized');
+                    elOnAuthorization.style.display = 'inline';
+                }
+            }
+
+            async function signout () {
+                localStorage.removeItem('aliceToken');
+                let elOnAuthorization = document.getElementById('show-if-authorized');
+                    elOnAuthorization.style.display = 'none';
+            }
+
+            function enableScreenLogging() {
+                let old = console.log;
+                let logger = document.getElementById('log');
+                console.log = function (message) {
+                    old(message);
+                    logger.innerHTML = message + '<br /><hr>' + logger.innerHTML;
+                }
+            }
+
             window.addEventListener("load", async function (event) {
-                console.log('SIMPLE DONATION EXAMPLE');
-                await test(10.4);
-                console.log('BIG (3DS) DONATION EXAMPLE');
-                await test(100); // 3DS password: secret3
+                setDefaultValuesForInputs();
+                enableScreenLogging();
             });
 
         </script>

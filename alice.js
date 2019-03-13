@@ -1,58 +1,53 @@
 import Request from 'request-promise-native';
-import Config from './config/config';
 import Logger from './logger';
 import MangoPay from 'mangopay-cardregistration-js-kit';
+import Auth from './auth';
+import Alert from './alert';
+import Config from './config';
 
 let Alice = {};
 
-/*
-    TODO think about:
-        - error recording (we have a special endpoint for it)
-        - Read about hidden passsword and start implementing
-        - Read about webpack server and tests
-        - Remove card name from alice-web front side
-*/
-
-
-/*
-    -- Donation options --
-    type: enum ["Anonymous", "Authorized"],
-    email: (string) required if type == "Anonymous"
-    projectCode: (string) Code of project you want to donate to
-    giftAid: (boolean)
-    amount: (number) value in GBP
-    cardData: {
-        number: '1111222233334444'
-        expirationDate: 'MMYY'
-        cvc: 'xxx',
-        name
-    }
-*/
 Alice.sendDonation = async ({
-    type,
-    email,
+    type, // enum: ['Authorized', 'Anonymous']
+    email, // required for anonymous donations
     projectCode,
     giftAid,
-    amount,
-    cardData
+    amount, // in pences
+    cardData: {
+        number, // e.g. 1111222233334444
+        expirationDate, // MMYY e.g. 1020
+        cvc // e.g 123
+    }
 }) => {
     try {
-        if (type) {
-            // TODO implement Authorized donations
-            throw 'We do not support type option yet';
+        if (type === 'Authorized' && !Auth.isAuthorized()) {
+            throw 'Failed trying to make authorized donation. There is no token in local storage.';
+        }
+        if (type === 'Anonymous' && !email) {
+            throw 'Email param is required to make donations without registration.';
+        }
+        if (!['Authorized', 'Anonymous'].includes(type)) {
+            throw `Donation type: ${type} is unsupported`;
         }
 
         let projectDetails = await getProjectDetails(projectCode);
         let projectId = projectDetails._id;
         Logger.debug(`Got project id: ${projectId}`);
 
-        let token = await registerEmail(email);
+        let token = await Auth.getTokenForDonation({
+            donationType: type,
+            email
+        });
         Logger.debug(`Got token: ${token}`);
         
         let preregistrationCardData = await preRegisterCard(token);
         Logger.debug('Card preregistration completed');
 
-        let registrationCardData = await registerCard(preregistrationCardData, cardData);
+        let registrationCardData = await registerCard(preregistrationCardData, {
+            number,
+            expirationDate,
+            cvc
+        });
         Logger.debug('Card registration completed');
     
         let sentDonation = await sendDonationInternal({
@@ -79,19 +74,12 @@ Alice.sendDonation = async ({
     }
 };
 
+Alice.authorize = Auth.authorize;
+Alice.isAuthorized = Auth.isAuthorized;
+
 const getProjectDetails = async (projectCode) => {
     let response = await Request.get(`${Config.API}/getProjectDetails/${projectCode}`);
     return JSON.parse(response);
-};
-
-const registerEmail = async (email) => {
-    let response = await Request.post(`${Config.API}/registerEmail`, {
-        json: {email}
-    });
-    if (!response.success) {
-        throw "Email registering failed";
-    }
-    return response.token;
 };
 
 const preRegisterCard = async (token) => {
@@ -142,9 +130,10 @@ const sendDonationInternal = async (donation, token) => {
 
 const process3DS = async (url, donationId, token) => {
     let newWindow = window.open(url, '_blank', 'height=570,width=520');
+    let popupAlertWasAlreadyShown = false;
+    const startTime3DS = Date.now();
 
     await new Promise((resolve, reject) => {
-        const timeout = 3000;
         // Waiting until 3DS verification is finished
         // https://stackoverflow.com/questions/9388380/capture-the-close-event-of-popup-window-in-javascript
         let timer = setInterval(async () => {
@@ -160,23 +149,24 @@ const process3DS = async (url, donationId, token) => {
                 // Checking donation status
                 let status = await checkDonationStatus(donationId, token);
                 Logger.debug(`Donation status: ${status}`);
-                switch (status) {
-                    case 'CREATED':
-                        return finish(resolve);
-                    case 'FAILED':
-                        return finish(reject);
-                    default:
-                        break;
+                if (status == 'FAILED') {
+                    Logger.error('Donation failed');
+                    return finish(reject);
+                } else if (status != '3DS') {
+                    finish(resolve);
                 }
             } else {
-                Logger.error('3DS verification failed, user may have disabled pop-ups in settings');
-                alert('Unfortunatelly 3DS verification was failed.'
-                    + ' Please allow pop-up windows opening for current page in you browser preferences.');
-                finish(() => {
-                    reject('Window was not opened');
-                });
+                if (!popupAlertWasAlreadyShown) {
+                    Logger.info('Popup can\'t be opened');
+                    popupAlertWasAlreadyShown = true;
+                    Alert.popupDisabled();
+                }
             }
-        }, timeout);
+
+            if (Date.now() > Config.timeout3DS + startTime3DS) {
+                finish(reject);
+            }
+        }, Config.defaultTimeout);
     });
 };
 
@@ -193,4 +183,9 @@ const checkDonationStatus = async (donationId, token) => {
 window.addEventListener("load", () => {
     window.Alice = Alice;
     Logger.debug('Alice API was loaded');
+
+    // Finishing authorization (sending received access code back to opener)
+    if (opener && location.href.includes('access_code')) {
+        Auth.finishAuthorization();
+    }
 });

@@ -7,9 +7,15 @@
     "example": "examples"
   },
   "scripts": {
-    "check-code": "eslint alice.js",
-    "build": "webpack",
-    "dev": "webpack-dev-server",
+    "build": "npm run build-prod",
+    "build-local": "eslint *.js && webpack --config webpack/local.config.js",
+    "build-stage": "eslint *.js && webpack --config webpack/stage.config.js",
+    "build-prod": "eslint *.js && webpack --config webpack/prod.config.js",
+    "dev-local": "webpack-dev-server --host 0.0.0.0 --config webpack/local.config.js",
+    "dev-stage": "webpack-dev-server --host 0.0.0.0 --config webpack/stage.config.js",
+    "dev-prod": "webpack-dev-server --host 0.0.0.0 --config webpack/prod.config.js",
+    "dev": "npm run dev-local",
+    "eslint-check": "eslint *.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,8 +30,8 @@
   },
   "homepage": "https://github.com/alice-si/alice-api#readme",
   "dependencies": {
-    "copy-webpack-plugin": "^5.0.0",
     "mangopay-cardregistration-js-kit": "^1.2.2",
+    "randomstring": "^1.1.5",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
     "winston": "^3.2.1"
@@ -34,6 +40,7 @@
     "eslint": "^5.14.1",
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3",
-    "webpack-dev-server": "^3.2.1"
+    "webpack-dev-server": "^3.2.1",
+    "webpack-merge": "^4.2.1"
   }
 }

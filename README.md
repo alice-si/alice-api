@@ -1,13 +1,31 @@
 # alice-api
 
+### How to use this API - TODO
+- Load script from https://s3.eu-west-2.amazonaws.com/alice-si-api/stage/alice.js
+- Now you should have access to Alice object
+
+You can see an example of usage in examples/example.html
+
 ### To test this API locally
-- run alice-web with `gulp watch-local` (shoul be started from alice-web folder)
-- run alice-api with `npm run dev`
-- go to http://localhost:9000/examples/example.html and open js console
+```
+npm install
+npm run dev
+```
 
-### To build javascript
-`npm run build`
+### Npm tasks
+```
+npm install # install dependencies
+npm run build-<MODE> # build js code (to dist folder) for selected mode (stage, local or prod)
+npm run build # build js code (for prod)
+npm run dev-<MODE> # run dev server using selected mode (stage, local or prod)
+npm run dev # run dev server on localhost:9000 (using stage)
+npm run eslint-check # to check js code with eslint
+```
 
-
-
-Readme is not finished yet ¯\_(ツ)_/¯
+### TODOs ¯\\_(ツ)_/¯
+- replace request-promise-native as it takes 60% of size after bundling
+- TODO describe Alice.sendDonation
+- TODO describe Alice.authorize
+- TODO describe Alice.isAuthorized
+- TODO add and describe Alice.on.successfulAuthorization
+- TODO add and describe Alice.on.failedAuthorization
