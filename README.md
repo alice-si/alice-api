@@ -25,7 +25,7 @@ npm run eslint-check # to check js code with eslint
 ### TODOs ¯\\_(ツ)_/¯
 - replace request-promise-native as it takes 60% of size after bundling
 - TODO describe Alice.sendDonation
-- TODO describe Alice.authorize
-- TODO describe Alice.isAuthorized
-- TODO add and describe Alice.on.successfulAuthorization
-- TODO add and describe Alice.on.failedAuthorization
+- TODO describe Alice.authenticate
+- TODO describe Alice.isAuthenticated
+- TODO add and describe Alice.on.successfulAuthentication
+- TODO add and describe Alice.on.failedAuthentication

@@ -34,14 +34,14 @@
         </div>
 
         <div id="buttons" style="margin: 30px;">
-                <button type="button" class="btn btn-primary" onclick="authorize()">Authorize</button>
+                <button type="button" class="btn btn-primary" onclick="authenticate()">Authenticate</button>
 
                 <button type="button" class="btn btn-info" onclick="sendDonation(10.5)">Small donation (10.5GBP)</button>
                 <button type="button" class="btn btn-success" onclick="sendDonation(100)">Big donation (100GBP)</button>
-                <div id="show-if-authorized" style="display: none;">
-                    <button type="button" class="btn btn-success" id="authorized-donation-button"
-                        onclick="sendDonation(10, 'Authorized')">
-                        Authorized donation (10GBP)
+                <div id="show-if-authenticated" style="display: none;">
+                    <button type="button" class="btn btn-success" id="authenticated-donation-button"
+                        onclick="sendDonation(10, 'Authenticated')">
+                        Authenticated donation (10GBP)
                     </button>
                     <button type="button" class="btn btn-secondary" id="signout-button"
                         onclick="signout()">
@@ -88,20 +88,20 @@
                 document.getElementById('email').value = generateEmail();
             }
 
-            async function authorize () {
-                await Alice.authorize({
+            async function authenticate () {
+                await Alice.authenticate({
                     clientId: 'forgotten-animals'
                 });
-                if (Alice.isAuthorized()) {
-                    let elOnAuthorization = document.getElementById('show-if-authorized');
-                    elOnAuthorization.style.display = 'inline';
+                if (Alice.isAuthenticated()) {
+                    let elOnAuthentication = document.getElementById('show-if-authenticated');
+                    elOnAuthentication.style.display = 'inline';
                 }
             }
 
             async function signout () {
                 localStorage.removeItem('aliceToken');
-                let elOnAuthorization = document.getElementById('show-if-authorized');
-                    elOnAuthorization.style.display = 'none';
+                let elOnAuthentication = document.getElementById('show-if-authenticated');
+                    elOnAuthentication.style.display = 'none';
             }
 
             function enableScreenLogging() {

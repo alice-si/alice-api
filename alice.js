@@ -8,7 +8,7 @@ import Config from './config';
 let Alice = {};
 
 Alice.sendDonation = async ({
-    type, // enum: ['Authorized', 'Anonymous']
+    type, // enum: ['Authenticated', 'Anonymous']
     email, // required for anonymous donations
     projectCode,
     giftAid,
@@ -20,13 +20,13 @@ Alice.sendDonation = async ({
     }
 }) => {
     try {
-        if (type === 'Authorized' && !Auth.isAuthorized()) {
-            throw 'Failed trying to make authorized donation. There is no token in local storage.';
+        if (type === 'Authenticated' && !Auth.isAuthenticated()) {
+            throw 'Failed trying to make authenticated donation. There is no token in local storage.';
         }
         if (type === 'Anonymous' && !email) {
             throw 'Email param is required to make donations without registration.';
         }
-        if (!['Authorized', 'Anonymous'].includes(type)) {
+        if (!['Authenticated', 'Anonymous'].includes(type)) {
             throw `Donation type: ${type} is unsupported`;
         }
 
@@ -74,8 +74,8 @@ Alice.sendDonation = async ({
     }
 };
 
-Alice.authorize = Auth.authorize;
-Alice.isAuthorized = Auth.isAuthorized;
+Alice.authenticate = Auth.authenticate;
+Alice.isAuthenticated = Auth.isAuthenticated;
 
 const getProjectDetails = async (projectCode) => {
     let response = await Request.get(`${Config.API}/getProjectDetails/${projectCode}`);
@@ -184,8 +184,8 @@ window.addEventListener("load", () => {
     window.Alice = Alice;
     Logger.debug('Alice API was loaded');
 
-    // Finishing authorization (sending received access code back to opener)
+    // Finishing authentication (sending received access code back to opener)
     if (opener && location.href.includes('access_code')) {
-        Auth.finishAuthorization();
+        Auth.finishAuthentication();
     }
 });

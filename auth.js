@@ -13,7 +13,7 @@ let Auth = {};
 
 Auth.getTokenForDonation = async function ({donationType, email}) {
   let token;
-  if (donationType == 'Authorized') {
+  if (donationType == 'Authenticated') {
     Logger.debug('Getting token from local storage');
     token = localStorage.getItem(tokenKeyForLocalStorage);
   } else if (donationType == 'Anonymous') {
@@ -26,7 +26,7 @@ Auth.getTokenForDonation = async function ({donationType, email}) {
   return token;
 }
 
-Auth.authorize = async ({
+Auth.authenticate = async ({
   clientId, // charityCode
   redirectUri
 }) => {
@@ -38,9 +38,9 @@ Auth.authorize = async ({
       // by default current url is a redirectUri
       redirectUri = location.href;
     }
-    let url = getAuthorizationUrl(state, clientId, redirectUri);
-    await processAuthorization(url);
-    Logger.debug('Authorization finished');
+    let url = getAuthenticationUrl(state, clientId, redirectUri);
+    await processAuthentication(url);
+    Logger.debug('Authentication finished');
   } catch (err) {
     if (err) {
       Logger.error(err.toString());
@@ -50,14 +50,14 @@ Auth.authorize = async ({
   }
 };
 
-Auth.isAuthorized = () => {
+Auth.isAuthenticated = () => {
   let token = localStorage.getItem(tokenKeyForLocalStorage);
-  Logger.debug(`Checking isAuthorized, got token: ${token}`);
+  Logger.debug(`Checking isAuthenticated, got token: ${token}`);
   return Boolean(token);
 };
 
 // This function is called on opened window
-Auth.finishAuthorization = async () => {
+Auth.finishAuthentication = async () => {
   try {
     let urlParams = new URLSearchParams(window.location.search);
     let accessCode = urlParams.get('access_code');
@@ -78,33 +78,33 @@ Auth.finishAuthorization = async () => {
 
     if (opener) {
       Logger.debug('Transfering token to opener');
-      opener.finishAuthorization({token});
+      opener.finishAuthentication({token});
     }
   } catch (err) {
-    Logger.error('finishAuthorization error');
+    Logger.error('finishAuthentication error');
     Logger.error(err);
-    opener.finishAuthorization({err});
+    opener.finishAuthentication({err});
   }
 };
 
-const processAuthorization = async (url) => {
+const processAuthentication = async (url) => {
   let newWindow = window.open(url, '_blank', 'height=570,width=520');
 
   if (!newWindow) {
     Alert.popupDisabled();
-    throw 'Authorization requires windows opening';
+    throw 'Authentication requires windows opening';
   }
 
   await new Promise((resolve, reject) => {
-    // This function (finishAuthorization) is called from popup window on the main window using opener
+    // This function (finishAuthentication) is called from popup window on the main window using opener
     // It transfers received access token to the main application window
-    window.finishAuthorization = async ({token, err}) => {
+    window.finishAuthentication = async ({token, err}) => {
       newWindow.close();
       if (err) {
-        Logger.error('Authorization failed');
+        Logger.error('Authentication failed');
         reject(err);
       } else {
-        Logger.debug(`Finishing authorization. Token received: ${token}`);
+        Logger.debug(`Finishing authentication. Token received: ${token}`);
         localStorage.setItem(tokenKeyForLocalStorage, token);
         resolve();
       }
@@ -129,7 +129,7 @@ const registerEmail = async (email) => {
   return response.token;
 }
 
-const getAuthorizationUrl = (state, clientId, redirectUri) =>
+const getAuthenticationUrl = (state, clientId, redirectUri) =>
   `${Config.URL}/oauth2?state=${state}&client_id=${clientId}&redirect_uri=${redirectUri}`
 
 const generateState = () => RandomString.generate(stateLength);
