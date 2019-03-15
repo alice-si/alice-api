@@ -145,17 +145,17 @@ const process3DS = async (url, donationId, token) => {
                 cb();
             };
 
-            if (newWindow) {
-                // Checking donation status
-                let status = await checkDonationStatus(donationId, token);
-                Logger.debug(`Donation status: ${status}`);
-                if (status == 'FAILED') {
-                    Logger.error('Donation failed');
-                    return finish(reject);
-                } else if (status != '3DS') {
-                    finish(resolve);
-                }
-            } else {
+            // Checking donation status
+            let status = await checkDonationStatus(donationId, token);
+            Logger.debug(`Donation status: ${status}`);
+            if (status == 'FAILED') {
+                Logger.error('Donation failed');
+                return finish(reject);
+            } else if (status != '3DS') {
+                finish(resolve);
+            }
+
+            if (!newWindow) {
                 if (!popupAlertWasAlreadyShown) {
                     Logger.info('Popup can\'t be opened');
                     popupAlertWasAlreadyShown = true;
