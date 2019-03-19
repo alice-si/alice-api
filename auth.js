@@ -27,7 +27,7 @@ Auth.getTokenForDonation = async function ({donationType, email}) {
 }
 
 Auth.authenticate = async ({
-  clientId, // charityCode
+  clientId, // charityId
   redirectUri
 }) => {
   try {
