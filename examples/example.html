@@ -36,8 +36,8 @@
         <div id="buttons" style="margin: 30px;">
                 <button type="button" class="btn btn-primary" onclick="authenticate()">Authenticate</button>
 
-                <button type="button" class="btn btn-info" onclick="sendDonation(10.5)">Small donation (10.5GBP)</button>
-                <button type="button" class="btn btn-success" onclick="sendDonation(100)">Big donation (100GBP)</button>
+                <button type="button" class="btn btn-info" onclick="sendDonationSafe(10.5)">Small donation (10.5GBP)</button>
+                <button type="button" class="btn btn-success" onclick="sendDonationSafe(100)">Big donation (100GBP)</button>
                 <div id="show-if-authenticated" style="display: none;">
                     <button type="button" class="btn btn-success" id="authenticated-donation-button"
                         onclick="sendDonation(10, 'Authenticated')">
@@ -81,13 +81,6 @@
                 return Alice.sendDonation(donation);
             }
 
-            function setDefaultValuesForInputs () {
-                document.getElementById('cc-number').value = '3569990000000124';
-                document.getElementById('exp-date').value = '1120';
-                document.getElementById('cvv').value = '123';
-                document.getElementById('email').value = generateEmail();
-            }
-
             async function authenticate () {
                 await Alice.authenticate({
                     clientId: '5bcdbc58a4965fc794ea0fff'
@@ -96,6 +89,30 @@
                     let elOnAuthentication = document.getElementById('show-if-authenticated');
                     elOnAuthentication.style.display = 'inline';
                 }
+            }
+
+            async function sendDonationSafe (amount, type='Anonymous') {
+                try {
+                    console.log('Sending donation safely');
+                    await sendDonation(amount, type);
+                } catch (err) {
+                    if (err.toString() == Alice.errors.authenticationRequired) {
+                        let shouldAuthenticate = confirm('Unfortunately this email can '
+                            + 'not be used for anonymous donations.'
+                            + ' Do you want to sign in?');
+                        if (shouldAuthenticate) {
+                            await authenticate();
+                            await sendDonation(amount, 'Authenticated');
+                        }
+                    }
+                }
+            }
+
+            function setDefaultValuesForInputs () {
+                document.getElementById('cc-number').value = '3569990000000124';
+                document.getElementById('exp-date').value = '1120';
+                document.getElementById('cvv').value = '123';
+                document.getElementById('email').value = generateEmail();
             }
 
             async function signout () {

@@ -5,7 +5,13 @@ import Auth from './auth';
 import Alert from './alert';
 import Config from './config';
 
+const EMAIL_REQUIRES_AUTH_RESPONSE = 'Passed email requires authentication';
+
 let Alice = {};
+
+Alice.errors = {
+    authenticationRequired: 'Email requires authentication'
+};
 
 Alice.sendDonation = async ({
     type, // enum: ['Authenticated', 'Anonymous']
@@ -68,6 +74,9 @@ Alice.sendDonation = async ({
     } catch (err) {
         if (err) {
             Logger.error(err.toString());
+            if (err.toString().includes(EMAIL_REQUIRES_AUTH_RESPONSE)) {
+                throw Alice.errors.authenticationRequired;
+            }
         } else {
             Logger.error('Unknown error occured');
         }
