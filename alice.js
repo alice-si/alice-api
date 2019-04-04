@@ -4,14 +4,11 @@ import MangoPay from 'mangopay-cardregistration-js-kit';
 import Auth from './auth';
 import Alert from './alert';
 import Config from './config';
-
-const EMAIL_REQUIRES_AUTH_RESPONSE = 'Passed email requires authentication';
+import Errors from './errors';
 
 let Alice = {};
 
-Alice.errors = {
-    authenticationRequired: 'Email requires authentication'
-};
+Alice.errors = Errors;
 
 Alice.sendDonation = async ({
     type, // enum: ['Authenticated', 'Anonymous']
@@ -74,12 +71,10 @@ Alice.sendDonation = async ({
     } catch (err) {
         if (err) {
             Logger.error(err.toString());
-            if (err.toString().includes(EMAIL_REQUIRES_AUTH_RESPONSE)) {
-                throw Alice.errors.authenticationRequired;
-            }
         } else {
             Logger.error('Unknown error occured');
         }
+        throw err;
     }
 };
 
@@ -87,7 +82,7 @@ Alice.authenticate = Auth.authenticate;
 Alice.isAuthenticated = Auth.isAuthenticated;
 
 const getProjectDetails = async (projectCode) => {
-    let response = await Request.get(`${Config.API}/getProjectDetails/${projectCode}`);
+    let response = await Request.get(`${Config.API}/projects/${projectCode}`);
     return JSON.parse(response);
 };
 

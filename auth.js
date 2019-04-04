@@ -3,6 +3,7 @@ import RandomString from 'randomstring';
 import Config from './config';
 import Logger from './logger';
 import Alert from './alert';
+import Errors from './errors';
 
 const stateLength = 10;
 const stateKeyForLocalStorage = 'aliceState';
@@ -92,7 +93,7 @@ const processAuthentication = async (url) => {
 
   if (!newWindow) {
     Alert.popupDisabled();
-    throw 'Authentication requires windows opening';
+    throw Errors.windowsOpeningRequired;
   }
 
   await new Promise((resolve, reject) => {
@@ -120,13 +121,21 @@ const getAccessToken = async (accessCode) => {
 };
 
 const registerEmail = async (email) => {
-  let response = await Request.post(`${Config.API}/registerEmail`, {
+  try {
+    let response = await Request.post(`${Config.API}/registerEmail`, {
       json: {email}
-  });
-  if (!response.token) {
-      throw "Email registering failed";
+    });
+    if (!response.token) {
+      throw Errors.emailRegisteringFailed;
+    }
+    return response.token;
+  } catch (err) {
+    if (err.statusCode == Config.emailRequiresAuthStatusCode) {
+      Logger.error('Passed email requires authentication');
+      throw Errors.authenticationRequired;
+    }
+    throw err;
   }
-  return response.token;
 }
 
 const getAuthenticationUrl = (state, clientId, redirectUri) =>
