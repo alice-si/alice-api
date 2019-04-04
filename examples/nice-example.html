@@ -56,6 +56,11 @@
               alert(msg);
             }
 
+            function fail(msg) {
+              // TODO use notification service
+              alert(msg);
+            }
+
             async function sendDonation () {
                 let email = document.getElementById('email').value;
                 let cvc = document.getElementById('cvv').value;
@@ -83,17 +88,19 @@
                         if (err.toString() == Alice.errors.authenticationRequired) {
                             donation.type = 'Authenticated';
                             await Alice.authenticate({
-                                clientId: '5bcdbc58a4965fc794ea0fff'
+                              clientId: '5bcdbc58a4965fc794ea0fff'
                             });
                             if (Alice.isAuthenticated()) {
-                                await Alice.sendDonation(donation);
+                              await Alice.sendDonation(donation);
+                              success('Successfully donated!');
+                            } else {
+                              fail('Something went wrong');
                             }
-                            success('Successfully donated!');
                         }
                     }
                     
                 } else {
-                    console.log('User rejected donation');
+                    fail('User rejected donation');
                 }
             }
 
