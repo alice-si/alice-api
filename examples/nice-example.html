@@ -38,7 +38,7 @@
         </div>
 
         <div id="buttons" style="margin: 30px;">
-                <button type="button" class="btn btn-primary" onclick="sendDonation()">Donate with Alice</button>
+                <button type="button" class="btn btn-success" onclick="sendDonation()">Donate with Alice</button>
         </div>
 
         <div style="margin: 30px" id="logs-container">
@@ -102,6 +102,7 @@
                 document.getElementById('exp-date').value = '1120';
                 document.getElementById('cvv').value = '123';
                 document.getElementById('email').value = generateEmail();
+                document.getElementById('amount').value = '10';
             }
 
             function enableScreenLogging() {
