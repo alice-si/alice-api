@@ -15,6 +15,13 @@
     <body>
         <h1>This is an example of alice-api usage</h1>
 
+        <div id="3ds-url-notification" style="display:none;">
+          <h4>
+            Please process 3ds verification using this
+            <a href="#" id="3ds-link" target="_blank" onclick="hide3DSNotification()">link</a>
+          </h4>
+        </div>
+
         <div class="row" style="width:50vw; margin: 30px;">
             <div class="col-md-12 mb-6">
                 <label for="email">Email</label>
@@ -39,10 +46,20 @@
         </div>
 
         <div id="buttons" style="margin: 30px;">
-                <button type="button" class="btn btn-success" onclick="sendDonation()">Donate with Alice</button>
+          <button type="button" class="btn btn-success" onclick="sendDonation()">Donate with Alice</button>
         </div>
-
         <script>
+            function on3DSVerification(url) {
+              console.log('Showing url for 3DS: ' + url);
+              document.getElementById('3ds-link').href = url;
+              document.getElementById('3ds-url-notification').style.display = 'block';
+            }
+
+            function hide3DSNotification() {
+              document.getElementById('3ds-url-notification').style.display = 'none';
+            }
+
+
             function generateEmail() {
                 return Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + '@gmail.com'
             }
@@ -74,7 +91,8 @@
                             number,
                             expirationDate,
                             cvc
-                        }
+                        },
+                        on3DSVerification
                     };
                     console.log('Sending donation');
                     try {

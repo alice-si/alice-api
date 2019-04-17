@@ -64,10 +64,11 @@ Auth.finishAuthentication = async () => {
     let accessCode = urlParams.get('access_code');
     let stateFromUrl = urlParams.get('state');
     let status = urlParams.get('status');
+    let err = urlParams.get('err');
     let stateFromLocalStorage = localStorage.getItem(stateKeyForLocalStorage);
     
     if (status !== 'SUCCEED') {
-      throw `Bad status: ${status}`;
+      throw `Bad status: ${status}. Err: ${err}`;
     }
     if (stateFromUrl !== stateFromLocalStorage) {
       throw `States are not equal: ${stateFromUrl} and ${stateFromLocalStorage}`;

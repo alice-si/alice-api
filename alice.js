@@ -20,7 +20,8 @@ Alice.sendDonation = async ({
         number, // e.g. 1111222233334444
         expirationDate, // MMYY e.g. 1020
         cvc // e.g 123
-    }
+    },
+    on3DSVerification // handler for 3DS payments (optional)
 }) => {
     try {
         if (type === 'Authenticated' && !Auth.isAuthenticated()) {
@@ -63,7 +64,7 @@ Alice.sendDonation = async ({
 
         if (sentDonation.secureModeNeeded) {
             Logger.debug(`Secure mode needed - processing 3DS with url: ${sentDonation.redirectUrl}`);
-            await process3DS(sentDonation.redirectUrl, sentDonation.donation._id, token);
+            await process3DS(sentDonation.redirectUrl, sentDonation.donation._id, token, on3DSVerification);
             Logger.debug('3DS processing finished');
         }
 
@@ -132,9 +133,13 @@ const sendDonationInternal = async (donation, token) => {
     return response;
 };
 
-const process3DS = async (url, donationId, token) => {
-    let newWindow = window.open(url, '_blank', 'height=570,width=520');
-    let popupAlertWasAlreadyShown = false;
+const process3DS = async (url, donationId, token, on3DSVerification) => {
+    let newWindow, popupAlertWasAlreadyShown;
+    if (on3DSVerification) {
+        on3DSVerification(url);
+    } else {
+        newWindow = window.open(url, '_blank', 'height=570,width=520');
+    }
     const startTime3DS = Date.now();
 
     await new Promise((resolve, reject) => {
@@ -159,12 +164,10 @@ const process3DS = async (url, donationId, token) => {
                 finish(resolve);
             }
 
-            if (!newWindow) {
-                if (!popupAlertWasAlreadyShown) {
-                    Logger.info('Popup can\'t be opened');
-                    popupAlertWasAlreadyShown = true;
-                    Alert.popupDisabled();
-                }
+            if (!newWindow && !on3DSVerification && !popupAlertWasAlreadyShown) {
+                Logger.info('Popup can\'t be opened');
+                popupAlertWasAlreadyShown = true;
+                Alert.popupDisabled();
             }
 
             if (Date.now() > Config.timeout3DS + startTime3DS) {
