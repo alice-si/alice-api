@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+
+        <title>API Alice example</title>
+        <meta name="description" content="API Alice usage simple example">
+        <meta name="author" content="alex@alice.si">
+        <link rel="shortcut icon" type="image/png" href="https://s3.eu-west-2.amazonaws.com/alice-res/favicon.ico"/>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <!-- <script src='https://s3.eu-west-2.amazonaws.com/alice-si-api/stage/alice.js'></script> -->
+        <script src='../alice.js'></script>
+    </head>
+
+    <body>
+        <h1>This is an example of alice-api usage</h1>
+
+        <div class="row" style="width:50vw; margin: 30px;">
+            <div class="col-md-12 mb-6">
+                <label for="email">Email</label>
+                <input type="text" class="form-control" id="email" placeholder="" required="">
+            </div>
+            <div class="col-md-12 mb-6">
+                <label for="cc-number">Card number</label>
+                <input type="text" class="form-control" id="cc-number" placeholder="" required="">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="exp-date">Expiration date</label>
+                <input type="text" class="form-control" id="exp-date" placeholder="" required="">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="cvv">CVV</label>
+                <input type="text" class="form-control" id="cvv" placeholder="" required="">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="amount">Amount</label>
+                <input type="text" class="form-control" id="amount" placeholder="" required="">
+            </div>
+        </div>
+
+        <div id="buttons" style="margin: 30px;">
+                <button type="button" class="btn btn-success" onclick="sendDonation()">Donate with Alice</button>
+        </div>
+
+        <script>
+            function generateEmail() {
+                return Math.random().toString(36).substring(7) + Math.random().toString(36).substring(7) + '@gmail.com'
+            }
+
+            function success(msg) {
+              // TODO use notification service
+              alert(msg);
+            }
+
+            function fail(msg) {
+              // TODO use notification service
+              alert(msg);
+            }
+
+            async function sendDonation () {
+                let email = document.getElementById('email').value;
+                let cvc = document.getElementById('cvv').value;
+                let expirationDate = document.getElementById('exp-date').value;
+                let number = document.getElementById('cc-number').value;
+                let amount = parseInt(document.getElementById('amount').value);
+
+                if (confirm(`Are you sure you want to donate ${amount}GBP with Alice?`)) {
+                    let donation = {
+                        email,
+                        type: 'Anonymous',
+                        projectCode: 'save-from-abuse',
+                        amount: amount * 100,
+                        cardData: {
+                            number,
+                            expirationDate,
+                            cvc
+                        },
+                        allowAnonymousDonationsForFullUsers: true
+                    };
+                    console.log('Sending donation');
+                    try {
+                        await Alice.sendDonation(donation);
+                        success('Successfully donated!');
+                    } catch (err) {
+                        if (err.toString() == Alice.errors.authenticationRequired) {
+                            donation.type = 'Authenticated';
+                            await Alice.authenticate({
+                              clientId: '5bcdbc58a4965fc794ea0fff'
+                            });
+                            if (Alice.isAuthenticated()) {
+                              await Alice.sendDonation(donation);
+                              success('Successfully donated!');
+                            } else {
+                              fail('Something went wrong');
+                            }
+                        }
+                    }
+                    
+                } else {
+                    fail('User rejected donation');
+                }
+            }
+
+            function setDefaultValuesForInputs () {
+                document.getElementById('cc-number').value = '3569990000000124';
+                document.getElementById('exp-date').value = '1120';
+                document.getElementById('cvv').value = '123';
+                document.getElementById('email').value = generateEmail();
+                document.getElementById('amount').value = '10';
+            }
+
+            function enableScreenLogging() {
+                let old = console.log;
+                let logger = document.getElementById('log');
+                console.log = function (message) {
+                    old(message);
+                    logger.innerHTML = message + '<br /><hr>' + logger.innerHTML;
+                }
+            }
+
+            window.addEventListener("load", async function (event) {
+                setDefaultValuesForInputs();
+                // enableScreenLogging();
+            });
+
+        </script>
+    </body>
+</html>

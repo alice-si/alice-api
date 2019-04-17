@@ -21,7 +21,8 @@ Alice.sendDonation = async ({
         expirationDate, // MMYY e.g. 1020
         cvc // e.g 123
     },
-    on3DSVerification // handler for 3DS payments (optional)
+    on3DSVerification, // handler for 3DS payments (optional)
+    allowAnonymousDonationsForFullUsers // boolean experimental field
 }) => {
     try {
         if (type === 'Authenticated' && !Auth.isAuthenticated()) {
@@ -40,6 +41,7 @@ Alice.sendDonation = async ({
 
         let token = await Auth.getTokenForDonation({
             donationType: type,
+            allowAnonymousDonationsForFullUsers,
             email
         });
         Logger.debug(`Got token: ${token}`);

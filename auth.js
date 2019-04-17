@@ -12,14 +12,23 @@ const tokenKeyForLocalStorage = 'aliceToken';
 
 let Auth = {};
 
-Auth.getTokenForDonation = async function ({donationType, email}) {
+Auth.getTokenForDonation = async function ({
+  donationType,
+  email,
+  allowAnonymousDonationsForFullUsers
+}) {
   let token;
   if (donationType == 'Authenticated') {
     Logger.debug('Getting token from local storage');
     token = localStorage.getItem(tokenKeyForLocalStorage);
   } else if (donationType == 'Anonymous') {
-    Logger.debug(`Registering simple user with email: ${email}`);
-    token = await registerEmail(email);
+    if (allowAnonymousDonationsForFullUsers) {
+      Logger.debug(`Getting token for email: ${email}`);
+      token = await getDonationTokenForEmail(email);
+    } else {
+      Logger.debug(`Registering simple user with email: ${email}`);
+      token = await registerEmail(email);
+    }
   } else {
     Logger.error(`Donation type ${donationType} is unknown`);
   }
@@ -137,6 +146,16 @@ const registerEmail = async (email) => {
     }
     throw err;
   }
+}
+
+const getDonationTokenForEmail = async (email) => {
+  let response = await Request.post(`${Config.API}/getTokenForAnonymousDonation`, {
+    json: {email}
+  });
+  if (!response.token) {
+    throw Errors.tokenGettingFailed;
+  }
+  return response.token;
 }
 
 const getAuthenticationUrl = (state, clientId, redirectUri) =>
