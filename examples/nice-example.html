@@ -17,6 +17,7 @@
     </head>
 
     <body>
+        <div id="loading-bar" style="display:none; width: 100vw;" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
         <h1>This is an example of alice-api usage</h1>
 
         <div class="row" style="width:50vw; margin: 30px;">
@@ -61,6 +62,15 @@
               alert(msg);
             }
 
+
+            function showLoadingBar() {
+                document.getElementById('loading-bar').style.display = 'block';
+            }
+
+            function hideLoadingBar() {
+                document.getElementById('loading-bar').style.display = 'none';
+            }
+
             async function sendDonation () {
                 let email = document.getElementById('email').value;
                 let cvc = document.getElementById('cvv').value;
@@ -82,7 +92,9 @@
                     };
                     console.log('Sending donation');
                     try {
+                        showLoadingBar();
                         await Alice.sendDonation(donation);
+                        hideLoadingBar();
                         success('Successfully donated!');
                     } catch (err) {
                         if (err.toString() == Alice.errors.authenticationRequired) {
@@ -91,9 +103,12 @@
                               clientId: '5bcdbc58a4965fc794ea0fff'
                             });
                             if (Alice.isAuthenticated()) {
+                              showLoadingBar();
                               await Alice.sendDonation(donation);
+                              hideLoadingBar();
                               success('Successfully donated!');
                             } else {
+                              hideLoadingBar();
                               fail('Something went wrong');
                             }
                         }
