@@ -4,18 +4,48 @@
 This is a JS library which could be used to enable Alice donations on a charity website.
 To integrate this API to your page please [contact us](mailto:alice@alice.si)
 
-### How to use
-- Load script from https://s3.eu-west-2.amazonaws.com/alice-si-api/prod/alice.js to your html page
+### Usage
+- Load script from https://clientapi.alice.si/alice.js to your html page (in head tag)
 ```html
-<script src='https://s3.eu-west-2.amazonaws.com/alice-si-api/prod/alice.js'></script>
+<script src='https://clientapi.alice.si/alice.js'></script>
 ```
-- Now you should have access to Alice object
-```js
-// To check avaliable functions
-conosole.log(Alice);
+- Insert the following script to your page (in body tag - in the end)
+Don't forget to replace <--YOUR-PROJECT-CODE--> with your real project code!
+The following code assumes that you have inputs with corresponding ids (to get payment details)
+and DONATE button with id: `donate-button`
+```html
+<script>
+  async function donate() {
+    try {
+      let email = document.getElementById('email').value;
+      let cvc = document.getElementById('cvv').value;
+      let expirationDate = document.getElementById('exp-date').value;
+      let number = document.getElementById('cc-number').value;
+      let amount = parseInt(document.getElementById('amount').value);
+
+      await Alice.sendDonation({
+        email,
+        type: 'Anonymous',
+        projectCode: '<--YOUR-PROJECT-CODE-->',
+        amount: amount * 100,
+        cardData: {
+            number,
+            expirationDate,
+            cvc
+        },
+        allowAnonymousDonationsForFullUsers: true
+      });
+      alert('Successfully donated');
+    } catch (err) {
+      alert('Donation failed :(');
+      console.error(err);
+    }
+  }
+  document.getElementById('donate-button').addEventListener('click', donate, false);
+</script>
 ```
 
-You can see an example of usage in [examples/example.html](./examples/example.html) or on our [s3 bucket](https://s3.eu-west-2.amazonaws.com/alice-si-api/stage/examples/example.html)
+[See minimal example of the implementation](./examples/minimal-example.html)
 
 
 ## For Alice developers
@@ -43,6 +73,6 @@ npm run eslint-check # to check js code with eslint
 To deploy alice-api please use alice-deployment project
 
 
-### TODOs ¯\\_(ツ)_/¯
+### Potential improvements
 - replace request-promise-native as it takes 60% of size after bundling
 - describe all exported functions

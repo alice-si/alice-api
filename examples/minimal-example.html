@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>API Alice example - minimal</title>
+        <script src='https://stage.clientapi.alice.si/alice.js'></script>
+    </head>
+
+    <body>
+        <h1>This is an example of alice-api usage</h1>
+
+        <p>This page is connected to stage version - don't donate real money</p>
+        <p>Inputs are filled with test card details for testing</p>
+
+        <div class="row" style="width:50vw; margin: 30px;">
+            <div>
+                <label for="email">Email</label>
+                <br>
+                <input type="text" value='somemail332@gmail.com' class="form-control" id="email" placeholder="" required="">
+            </div>
+            <div>
+                <label for="cc-number">Card number</label>
+                <br>
+                <input type="text" value="3569990000000124" class="form-control" id="cc-number" placeholder="" required="">
+            </div>
+            <div>
+                <label for="exp-date">Expiration date</label>
+                <br>
+                <input type="text" value="1120" class="form-control" id="exp-date" placeholder="" required="">
+            </div>
+            <div>
+                <label for="cvv">CVV</label>
+                <br>
+                <input type="text" value="123" class="form-control" id="cvv" placeholder="" required="">
+            </div>
+            <div>
+                <label for="cvv">Amount (GBP)</label>
+                <br>
+                <input type="text" value="10" class="form-control" id="amount" placeholder="" required="">
+            </div>
+        </div>
+
+        <div id="buttons">
+          <button type="button" id="donate-button">DONATE</button>
+        </div>
+
+        <script>
+          async function donate() {
+            try {
+              let email = document.getElementById('email').value;
+              let cvc = document.getElementById('cvv').value;
+              let expirationDate = document.getElementById('exp-date').value;
+              let number = document.getElementById('cc-number').value;
+              let amount = parseInt(document.getElementById('amount').value);
+
+              await Alice.sendDonation({
+                email,
+                type: 'Anonymous',
+                projectCode: 'save-from-abuse',
+                amount: amount * 100,
+                cardData: {
+                    number,
+                    expirationDate,
+                    cvc
+                },
+                allowAnonymousDonationsForFullUsers: true
+              });
+              alert('Successfully donated');
+            } catch (err) {
+              alert('Donation failed :(');
+              console.error(err);
+            }
+          }
+          document.getElementById('donate-button').addEventListener('click', donate, false);
+        </script>
+    </body>
+</html>
