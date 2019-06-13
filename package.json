@@ -11,6 +11,7 @@
     "build-local": "eslint *.js && webpack --config webpack/local.config.js",
     "build-stage": "eslint *.js && webpack --config webpack/stage.config.js",
     "build-prod": "eslint *.js && webpack --config webpack/prod.config.js",
+    "build-custom": "eslint *.js && webpack --config webpack/custom.config.js",
     "dev-local": "webpack-dev-server --host 0.0.0.0 --config webpack/local.config.js",
     "dev-stage": "webpack-dev-server --host 0.0.0.0 --config webpack/stage.config.js",
     "dev-prod": "webpack-dev-server --host 0.0.0.0 --config webpack/prod.config.js",
